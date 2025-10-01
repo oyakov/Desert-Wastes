@@ -6,9 +6,9 @@
 - **Relationships**: Friendship, rivalry, mentorship, kinship tracked via weighted scores and shared history events (`docs/DATA_MODEL.md`).
 
 ## Mood & Mandates
-- Moods derive from needs, recent events, leadership actions, and environment quality (`docs/BASE_MODE.md`).
-- Nobles and influential characters issue mandates (resource quotas, construction, policy shifts).
-- Compliance boosts loyalty; failure increases resentment and may trigger coups or desertion.
+- Moods derive from needs, recent events, leadership actions, and environment quality (`docs/BASE_MODE.md`). `BaseRuntimeState.MandateTracker` queues mandates seeded during bootstrap and from noble responses.
+- Nobles and influential characters issue mandates (resource quotas, construction, policy shifts) that resolve through `MandateResolutionSystem` with deterministic rewards/penalties.
+- Compliance boosts loyalty/infrastructure; failure increases resentment, drains morale infrastructure, and may elevate raid alert levels.
 
 ## Noble Roles
 | Role | Responsibilities | Failure Consequence |
@@ -26,8 +26,8 @@
 - Succession outcomes update legends log and influence faction diplomacy (`docs/WORLDGEN.md`).
 
 ## Social Simulation Hooks
-- Events pipeline integrates with architecture event bus (`docs/ARCHITECTURE.md`).
-- Tests validate mandate compliance logic and loyalty adjustments (`docs/TEST_PLAN.md`).
+- Events pipeline integrates with the deterministic event bus (`docs/ARCHITECTURE.md`). `BaseMandateResolved` events feed Oracle tension adjustments and legends logging.
+- EditMode tests cover mandate queuing/resolution and Oracle tension feedback via `BaseModeSimulationLoopTests` and `SampleWorldBuilder` fixtures (`docs/TEST_PLAN.md`).
 
 ## Cross-References
 - Data model specifics: `docs/DATA_MODEL.md`

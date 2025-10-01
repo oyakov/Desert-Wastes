@@ -93,7 +93,7 @@ WorldData
 | --- | --- | --- |
 | Id | string | Stable card identifier (e.g., `card_rise_nemesis`). |
 | Effects | List<EventEffect> | Declarative payload consumed by services (`docs/ARCHITECTURE.md`). |
-| Narrative | LocalizedStringId | Text surfaced in legends/alerts. |
+| Narrative | string | Narrative snippet written directly into legends/alerts. |
 
 ### ApocalypseMeta
 | Field | Type | Notes |
