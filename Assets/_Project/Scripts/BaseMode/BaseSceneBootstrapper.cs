@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Wastelands.Core.Data;
 using Wastelands.Core.Management;
+using Wastelands.Core.Services;
 
 namespace Wastelands.BaseMode
 {
@@ -51,7 +52,11 @@ namespace Wastelands.BaseMode
 
             if (_systems.Count == 0)
             {
-                _systems.AddRange(CreateDefaultSystems());
+                _systems.AddRange(CreateDefaultSystems(_services.EventBus));
+            }
+            else if (_systems.All(system => system is not OracleIncidentResolutionSystem))
+            {
+                _systems.Add(new OracleIncidentResolutionSystem(_services.EventBus));
             }
 
             SimulationLoop = new BaseModeSimulationLoop(_world, Runtime, _systems, _services.RngService);
@@ -60,14 +65,15 @@ namespace Wastelands.BaseMode
             _services.EventBus.Publish(new BaseIndirectCommandDispatcherReady(_commandDispatcher));
         }
 
-        private static IEnumerable<IBaseModeSystem> CreateDefaultSystems()
+        private static IEnumerable<IBaseModeSystem> CreateDefaultSystems(IEventBus eventBus)
         {
             return new IBaseModeSystem[]
             {
                 new ZoneMaintenanceSystem(),
                 new JobSchedulingSystem(),
                 new RaidThreatSystem(),
-                new MandateResolutionSystem()
+                new MandateResolutionSystem(),
+                new OracleIncidentResolutionSystem(eventBus)
             };
         }
 
