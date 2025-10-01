@@ -11,10 +11,10 @@ An additive UI scene provides HUD, overlays, and shared interface components acr
 
 ## State Flow
 1. **Boot**: Composition root initializes DI container, deterministic RNG streams, and Time provider (`docs/ARCHITECTURE.md`).
-2. **Generate**: World scene requests WorldData from Generation layer; deterministically creates map, factions, legends seeds.
-3. **Simulate**: Overworld ticks yearly, updating factions, logging events, and feeding tension metrics into the Oracle AI for potential deck draws.
+2. **Generate**: World scene requests `WorldData` from `OverworldGenerationPipeline`; factions, settlements, oracle/base seeds, and legends scaffolding are normalized before hand-off.
+3. **Simulate**: `OverworldSimulationLoop` runs yearly phases (faction growth, trade, Oracle review), logging deterministic events and updating Oracle tension for later incidents.
 4. **Embark**: Player selects leader, team, and site (`docs/BASE_MODE.md`).
-5. **Base**: Daily ticks manage jobs, hazards, raids, and Oracle-triggered incidents while writing events to legends.
+5. **Base**: `BaseSceneBootstrapper` constructs `BaseRuntimeState` and registers `BaseModeSimulationLoop`, whose modular systems manage jobs, raids, mandates, and Oracle incidents while writing events to legends.
 6. **Return**: On exit, Base state syncs back to World scene; overworld simulation resumes.
 
 ## Performance Notes

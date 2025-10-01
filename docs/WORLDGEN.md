@@ -8,17 +8,17 @@
 
 ## Map Generation Pipeline
 1. **Seed Intake**: Single 64-bit seed enters deterministic RNG wrapper (see `docs/TEST_PLAN.md`).
-2. **Heightmap**: Generate base landmass using layered noise; enforce tectonic-style ridgelines.
-3. **Climate**: Derive temperature and moisture via latitude, elevation, and prevailing winds.
-4. **Biomes**: Map tiles to biomes using height/temp/moisture thresholds with apocalypse modifiers (e.g., scorched deserts, fungal forests).
-5. **Hazards**: Overlay apocalypse-type hazards (radiation zones, nanite storms) with weighted falloff.
-6. **Resources**: Place resource veins and relic caches with biome-specific tables.
+2. **Heightmap**: `GenerateTiles` samples deterministic noise channels (`worldgen.heightmap`) to produce height values and stable tile IDs.
+3. **Climate**: Temperature/moisture derive from latitude formulas plus channel noise (`worldgen.climate`).
+4. **Biomes**: `SelectBiome` categorizes tiles using height/temperature/moisture thresholds and apocalypse modifiers (scorched deserts, fungal forests).
+5. **Hazards**: `DetermineHazards` overlays apocalypse-specific tags (radiation zones, nanite storms) with channel weighting.
+6. **Resources**: `DetermineResources` injects biome-weighted supply nodes via `worldgen.resources` channel.
 
 ## Faction Seeding
 - Identify habitable clusters by biome and resource richness.
-- Assign faction archetypes (warlords, scholars, merchants) influenced by era events.
-- Determine leadership traits and noble lineages per faction.
-- Establish diplomacy predispositions (alliances, rivalries) for simulation seeding.
+- Assign faction archetypes (Nomads, Technocracy, Zealots, Guardians, etc.) using deterministic RNG seeded by faction index.
+- Determine leadership traits and noble lineages per faction; create leaders tied to `NobleRole` slots for immediate Base Mode use.
+- Establish diplomacy predispositions (alliances, rivalries) stored in `RelationRecord` collections for overworld simulation seeding.
 
 ## Relic & Hazard Sites
 - **Relic Sites**: Remnants of Pre-Fall tech with unique modifiers; require expedition-level skills.
@@ -39,3 +39,4 @@
 - Data schema: `docs/DATA_MODEL.md`
 - Simulation tick usage: `docs/ARCHITECTURE.md`
 - Testing strategy: `docs/TEST_PLAN.md`
+- Feature context: `docs/DESIGN.md`

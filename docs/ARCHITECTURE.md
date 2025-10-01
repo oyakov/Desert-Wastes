@@ -3,11 +3,11 @@
 ## Layered Structure
 | Layer | Responsibilities | Assembly (planned) |
 | --- | --- | --- |
-| Core | Deterministic tick management, DI container seams, event bus, RNG/time abstractions. | `Wastelands.Core` |
+| Core | Deterministic tick management, DI container seams, event bus, RNG/time abstractions. | `Wastelands.Core` (TickManager, DeterministicServiceContainer, ManualTimeProvider, EventBus/RNG services) |
 | Generation | World creation algorithms, apocalypse synthesis, faction seeding. | `Wastelands.Generation` |
-| Simulation (Overworld) | Yearly tick processing, diplomacy, trade, raids, legends updates. | `Wastelands.Simulation` |
-| BaseMode | Daily base simulation, jobs, hazards, raids. | `Wastelands.BaseMode` |
-| UI | Presentation logic, overlays, HUD, indirect order interfaces. | `Wastelands.UI` |
+| Simulation (Overworld) | Yearly tick processing, diplomacy, trade, raids, legends updates. | `Wastelands.Simulation` (`OverworldSimulationLoop`, `OverworldSimulationPhases`) |
+| BaseMode | Daily base simulation, jobs, hazards, raids. | `Wastelands.BaseMode` (`BaseSceneBootstrapper`, `BaseModeSimulationLoop`, modular systems) |
+| UI | Presentation logic, overlays, HUD, indirect order interfaces. | `Wastelands.UI` (`BaseSceneProductionUI`, HUD bindings) |
 | Persistence | Save/load, snapshot management, JSON serialization, schema versioning. | `Wastelands.Persistence` |
 | Utils | Shared math helpers, data transforms, extension methods. | `Wastelands.Utils` (implicit within Core if needed) |
 
@@ -28,10 +28,10 @@ Wastelands.BaseMode   Wastelands.Simulation
 - `Wastelands.Utils` (if split) may be referenced by all non-UI assemblies but must remain Unity-agnostic.
 
 ## Dependency Rules
-- Core has no dependencies on UnityEngine types; other assemblies interact with Unity via adapter interfaces defined in Core.
+- Core has no dependencies on UnityEngine types; other assemblies interact with Unity via adapter interfaces defined in Core. Unity-facing glue (e.g., `BaseSceneBootstrapper`, UI behaviours) wraps those interfaces without leaking Unity types back into Core.
 - Generation depends only on Core and Utils.
 - Simulation depends on Core, Generation, and Persistence for data access.
-- BaseMode depends on Core and Persistence; may consume Simulation DTOs but not behaviors.
+- BaseMode depends on Core and Persistence; may consume Simulation DTOs but not behaviors. Systems operate purely on `WorldData` + `BaseRuntimeState`, enabling EditMode coverage without Unity dependencies.
 - UI depends on Core, Simulation, and BaseMode for view models only.
 - Persistence depends on Core for data models; no upward dependencies.
 - Tests assemblies reference runtime assemblies but cannot be referenced back.
@@ -39,17 +39,17 @@ Wastelands.BaseMode   Wastelands.Simulation
 ## Service Boundaries & Interfaces
 - **IRngService**: Deterministic stream provider with named channels (terrain, factions, combat). Seed injected at Boot.
 - **ITimeProvider**: Offers current tick, converts between overworld/yearly and base/daily scales (mockable).
-- **IEventBus**: Publish/subscribe system for cross-layer communication without static singletons.
+- **IEventBus**: Publish/subscribe system for cross-layer communication without static singletons. Base Mode systems consume/publish `BaseJobCompleted`, `BaseRaidScheduled`, `BaseMandateResolved`, and `OracleIncidentInjected` events.
 - **IPathfinder**: Abstract pathfinding logic enabling mockable tests and future job system offloading.
 - **IPersistenceGateway**: Handles read/write of JSON snapshots; implemented in Persistence, mocked in tests.
-- **IOracleInterventionService**: Determines when the overseer AI draws from Minor/Major/Epic decks and emits deterministic intervention commands.
+- **IOracleInterventionService**: Determines when the overseer AI draws from Minor/Major/Epic decks and emits deterministic intervention commands. The overworld `OracleReviewPhase` samples tension metrics and schedules `OracleIncidentInjected` payloads consumed by Base Mode systems.
 - **IAudio/IVfx Interfaces**: Unity adapters living in UI assembly; core logic only raises intents.
 
 ## Update & Tick Model
 - **Overworld**: Fixed yearly tick triggered by Simulation layer, pulling data from Generation and Core state.
-- **Base Mode**: Fixed daily tick subdivided into hourly microticks for job scheduling.
+- **Base Mode**: Fixed daily tick subdivided into hourly microticks for job scheduling. `BaseModeTickContext` exposes `HoursPerDay` and seeded RNG channels so systems (jobs, raids, Oracle) can deterministically subdivide work.
 - **Event Processing**: Commanded through event bus to ensure deterministic order; queue processed each tick.
-- **Oracle Evaluation**: `IOracleInterventionService` samples tension metrics after simulation ticks, selects eligible deck/cards, and pushes effects back through the event bus.
+- **Oracle Evaluation**: `IOracleInterventionService` samples tension metrics after simulation ticks, selects eligible deck/cards, and pushes effects back through the event bus where `OracleIncidentResolutionSystem` applies payloads and rebalances deck weights.
 - **Performance**: Use object pools and struct-based DTOs to reduce GC pressure; no static mutable state.
 
 ## Assembly Definition Plan
@@ -61,6 +61,7 @@ Wastelands.BaseMode   Wastelands.Simulation
 - `Wastelands.Persistence.asmdef`
 - `Wastelands.Tests.EditMode.asmdef`
 - `Wastelands.Tests.PlayMode.asmdef`
+- `Tests/PlayMode` currently hosts smoke tests validating indirect commands and bootstrap flows; flesh out coverage as base UI matures.
 
 Dependencies follow the diagram above; tests reference their required runtime assemblies only.
 

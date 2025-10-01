@@ -37,14 +37,14 @@ Players set intents, priorities, and doctrines. Units interpret orders based on 
 - Deterministic RNG ensures reproducible outcomes for testing (`docs/TEST_PLAN.md`).
 
 ## Oracle AI Interventions
-- **Role**: A semi-divine overseer AI acts as a game master, drawing from tiered event decks (Minor, Major, Epic) to escalate or ease pressure based on world tension metrics.
+- **Role**: The `OracleReviewPhase` inside `OverworldSimulationLoop` monitors world tension, adjusts deck weights, and emits deterministic `OracleIncidentInjected` payloads when thresholds are crossed.
 - **Event Decks**:
-  - *Minor*: Tactical twists (reinforcement delays, sandstorms, morale visions) that alter immediate combat modifiers.
-  - *Major*: Strategic shifts (enemy champions, supply boons, diplomatic ultimatums) that ripple across overworld simulation.
-  - *Epic*: Campaign-defining events (Rise of a Nemesis commander, apocalyptic omen, divine respite) that reconfigure long-term goals.
-- **Trigger Logic**: Deck selection uses deterministic thresholds tied to simulation stress, noble mandates, and player choices to preserve testability and fairness (`docs/ARCHITECTURE.md`).
-- **Delivery**: Interventions manifest as orders relayed through command hierarchy, environmental modifiers, or narrative events logged into legends.
-- **Player Response**: Players receive limited countermeasures (rituals, diplomacy, intel) to anticipate the Oracle's next draw.
+  - *Minor*: Tactical twists (reinforcement delays, sandstorms, morale visions) applied by `OracleIncidentResolutionSystem` as infrastructure/morale nudges and temporary raid modifiers.
+  - *Major*: Strategic shifts (enemy champions, supply boons, diplomatic ultimatums) that update overworld factions and Base Mode threat meters.
+  - *Epic*: Campaign-defining events (Rise of a Nemesis commander, apocalyptic omen, divine respite) that inject multi-step incidents and legends entries.
+- **Trigger Logic**: Deck selection uses deterministic thresholds tied to Oracle tension, mandate outcomes, and raid results to preserve testability (`docs/ARCHITECTURE.md`). Cooldowns and deck weights are normalized after each incident.
+- **Delivery**: `OracleSynchronizer` publishes incidents to Base Mode, where `OracleIncidentResolutionSystem` applies effect payloads and adjusts deck weights/cooldowns. Overworld incidents route through event logs and faction state.
+- **Player Response**: Players counter by pursuing mandates, patrol jobs, and infrastructure upgrades that lower tension or add defensive buffers before the next draw.
 
 ## Cross-References
 - Social impacts: `docs/SOCIAL_NOBLES.md`
