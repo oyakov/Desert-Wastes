@@ -19,14 +19,14 @@
 
 ## Scope Planning
 
-| Feature Area | MVP Scope | Future Scope |
-| --- | --- | --- |
-| World Generation | Deterministic height/temp/moisture map, factions, relic sites, apocalypse hazards, legends log. | Dynamic weather, migrations, procedural story events, mod hooks. |
-| Overworld Simulation | Yearly ticks for faction expansion, diplomacy, trade, raids. | Multi-faction diplomacy UI, espionage, cultural diffusion. |
-| Base Mode | DF-style zones, job assignments, industries, research queue, raids. | Multi-layer bases, advanced automation, noble courts. |
-| AI & Combat | Indirect orders, leadership modifiers, morale, command radius. | Complex doctrines, psychological warfare, advanced logistics. |
-| Social Systems | Personalities, needs, noble mandates, succession rules. | Festivals, religion, dynamic laws, player-made policies. |
-| Persistence | JSON snapshots, legends log export, manual saves/loads. | Cloud sync, replay viewer, timeline scrubbing. |
+| Feature Area | MVP Scope | Current Implementation Notes | Future Scope |
+| --- | --- | --- | --- |
+| World Generation | Deterministic height/temp/moisture map, factions, relic sites, apocalypse hazards, legends log. | `OverworldGenerationPipeline` builds tiles, factions, settlements, characters, oracle/base seeds, and normalizes data before handing to simulation. | Dynamic weather, migrations, procedural story events, mod hooks. |
+| Overworld Simulation | Yearly ticks for faction expansion, diplomacy, trade, raids. | `OverworldSimulationLoop` chains discrete phases (faction growth, trade, Oracle review) and logs deterministic events for legends and persistence. | Multi-faction diplomacy UI, espionage, cultural diffusion. |
+| Base Mode | DF-style zones, job assignments, industries, research queue, raids. | `BaseSceneBootstrapper` seeds `BaseRuntimeState`; modular systems (zones, jobs, raids, mandates, Oracle) execute each tick via `BaseModeSimulationLoop`. | Multi-layer bases, advanced automation, noble courts. |
+| AI & Combat | Indirect orders, leadership modifiers, morale, command radius. | Command intents travel through data-driven jobs/raids; Oracle incidents and raid threat tie into command hierarchy without direct control. | Complex doctrines, psychological warfare, advanced logistics. |
+| Social Systems | Personalities, needs, noble mandates, succession rules. | Mandate tracker & noble roles integrate with base/overworld state; incident effects adjust loyalty and infrastructure. | Festivals, religion, dynamic laws, player-made policies. |
+| Persistence | JSON snapshots, legends log export, manual saves/loads. | `OverworldSnapshotGateway` serializes deterministic `WorldData` snapshots; combined overworld/base save pipeline planned for M3 exit. | Cloud sync, replay viewer, timeline scrubbing. |
 
 ## Cross-References
 - Generation details: `docs/WORLDGEN.md`
