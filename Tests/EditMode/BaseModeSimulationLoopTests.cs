@@ -50,6 +50,26 @@ namespace Wastelands.Tests.EditMode
             Assert.AreEqual(serializer.Serialize(worldA), serializer.Serialize(worldB));
         }
 
+        [Test]
+        public void SimulationLoop_OracleSynchronizationEmitsIncidents()
+        {
+            var world = SampleWorldBuilder.CreateValidWorld();
+            world.OracleState.Cooldowns["card_rise_nemesis"] = 0;
+
+            var services = CreateServices();
+            var bootstrapper = new BaseSceneBootstrapper(world, services);
+
+            var incidents = new List<OracleIncidentInjected>();
+            services.EventBus.Subscribe<OracleIncidentInjected>(evt => incidents.Add(evt));
+
+            bootstrapper.Initialize();
+            services.TickManager.Advance(240);
+
+            Assert.That(incidents, Is.Not.Empty);
+            Assert.That(world.OracleState.Cooldowns["card_rise_nemesis"], Is.EqualTo(6));
+            Assert.AreNotEqual(0.5f, world.OracleState.TensionScore);
+        }
+
         private static SimulationResult RunSimulation(WorldData world, int ticks)
         {
             var services = CreateServices();

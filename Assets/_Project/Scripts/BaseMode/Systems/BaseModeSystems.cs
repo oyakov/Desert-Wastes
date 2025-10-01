@@ -282,6 +282,7 @@ namespace Wastelands.BaseMode
                 }
             });
 
+            OracleSynchronizer.RecordRaidOutcome(context, raidState.AttackingFactionId, eventId);
             AdjustDefenseAfterRaid(context.BaseState.Infrastructure);
             context.EventBus.Publish(new BaseRaidResolved(eventId, raidState.AttackingFactionId));
         }
@@ -314,6 +315,7 @@ namespace Wastelands.BaseMode
                 ApplyResolutionEffects(resolution, context);
                 LogResolutionEvent(resolution, context);
                 context.EventBus.Publish(new BaseMandateResolved(resolution.Mandate, resolution.Result, context.Tick));
+                OracleSynchronizer.RecordMandateOutcome(context, resolution);
 
                 if (resolution.Result == MandateStatus.Completed)
                 {
