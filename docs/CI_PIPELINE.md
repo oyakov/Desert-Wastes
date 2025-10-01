@@ -34,10 +34,11 @@ The `-batchmode` and `-quit` flags ensure the process exits once the tests finis
 `-testResults` path emits NUnit-compatible XML that CI systems can parse for reporting.
 
 ## Example GitHub Actions Workflow
-Below is a minimal pipeline configuration that installs Unity via the
-[`game-ci/unity-test-runner`](https://github.com/game-ci/unity-test-runner) action and runs both suites.
-You can adapt the same structure for GitLab CI, Azure Pipelines, or Jenkins by substituting the
-installation step with your runner's preferred Unity provisioning strategy.
+This repository includes a ready-to-use workflow at `.github/workflows/unity-tests.yml`
+that installs Unity via the [`game-ci/unity-test-runner`](https://github.com/game-ci/unity-test-runner)
+action and runs both suites on every pull request and pushes to the `develop` branch. You can adapt the
+same structure for GitLab CI, Azure Pipelines, or Jenkins by substituting the installation step with your
+runner's preferred Unity provisioning strategy.
 
 ```yaml
 name: Unity Tests
@@ -45,25 +46,31 @@ name: Unity Tests
 on:
   pull_request:
   push:
-    branches: [ develop ]
+    branches:
+      - develop
 
 jobs:
   tests:
+    name: Run Unity EditMode and PlayMode suites
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v4
-      - name: Cache Library
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Cache Unity Library
         uses: actions/cache@v3
         with:
           path: Library
           key: Library-${{ hashFiles('**/Packages/packages-lock.json') }}
-      - name: Run Unity Test Runner (EditMode + PlayMode)
+      - name: Run Unity Test Runner
         uses: game-ci/unity-test-runner@v4
         with:
           projectPath: .
           unityVersion: 2022.3.0f1
           testMode: all
-      - name: Upload Test Results
+      - name: Upload test results
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: unity-test-results
