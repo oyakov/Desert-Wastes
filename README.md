@@ -20,7 +20,7 @@ This repository currently contains design documents, folder scaffolding, and pla
 - Preserve determinism and testability seams (RNG, Time, IO) in all systems.
 
 ## What Exists Now
-- Documentation of design pillars, world generation, AI, social systems, architecture, and test plan.
+- Documentation of design pillars, world generation, AI, social systems, mechanic context, architecture, and test plan.
 - Folder structure matching the planned Unity project layout with placeholder markers.
 - `.gitignore` tuned for Unity and this documentation-focused phase.
 
