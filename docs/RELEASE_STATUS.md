@@ -3,24 +3,24 @@
 _Last updated: 2025-10-01_
 
 ## Current Stage Summary
-- **Stage**: Milestone M0 – Docs & Scaffolding.
-- **Rationale**: Repository currently contains documentation, planning artifacts, and placeholder Unity folders without runtime code or assets.
+- **Stage**: Milestone M1 – Code Scaffold (in progress).
+- **Rationale**: Unity project settings, scoped assembly definitions, deterministic services, and tick management with EditMode tests are now implemented. Baseline data containers and integration seams remain outstanding before calling M1 complete.
 
 ## Milestone Breakdown
 
 | Milestone | Deliverable Snapshot | Status | Evidence |
 | --- | --- | --- | --- |
-| **M0 – Docs & Scaffolding** | Documentation set (design, architecture, tests), project scaffolding, Unity-focused `.gitignore`, placeholder assets | ✅ Complete | `docs/` design docs, `README.md` summary of current repository contents, `.gitignore`, placeholder folders in `Assets/` and `ProjectSettings/` |
-| **M1 – Code Scaffold** | Unity project settings, assembly definitions, deterministic services, TickManager, baseline data containers with tests | ⏳ Not started | `ProjectSettings/` contains only `placeholder.txt`; no `*.asmdef` or `Scripts/` content yet |
-| **M2 – Overworld Gen + Sim** | World generation pipeline, overworld simulation loop, legends logging, persistence seams with tests | ⏳ Not started | No gameplay code or simulation assets present |
-| **M3 – Base Mode MVP** | Base scene systems (zones, jobs, raids, social mandates), Oracle integration, comprehensive save/load & tests | ⏳ Not started | No gameplay implementation or scenes beyond scaffolding |
+| **M0 – Docs & Scaffolding** | Documentation set (design, architecture, tests), project scaffolding, Unity-focused `.gitignore`, placeholder assets | ✅ Complete | `docs/` design docs, refreshed `README.md`, Unity folder layout in `Assets/` and `ProjectSettings/` |
+| **M1 – Code Scaffold** | Unity project settings, assembly definitions, deterministic services, TickManager, baseline data containers with tests | 🟡 In progress | `ProjectSettings/*.asset`, asmdefs in `Assets/_Project/Scripts/**`, deterministic services & tick manager (`Assets/_Project/Scripts/Core/**`), EditMode tests in `Tests/EditMode/*.cs`; data containers still pending |
+| **M2 – Overworld Gen + Sim** | World generation pipeline, overworld simulation loop, legends logging, persistence seams with tests | ⏳ Not started | No overworld generation or simulation implementations present |
+| **M3 – Base Mode MVP** | Base scene systems (zones, jobs, raids, social mandates), Oracle integration, comprehensive save/load & tests | ⏳ Not started | Base mode gameplay systems not yet implemented |
 
-## Key Gating Items to Reach M1
-1. Generate Unity project settings files and assembly definition assets per `docs/ARCHITECTURE.md`.
-2. Implement deterministic service interfaces (RNG, time) and foundational managers outlined in `docs/TEST_PLAN.md` and `docs/ARCHITECTURE.md`.
-3. Establish initial EditMode unit tests covering the scaffolding components.
+## Key Gating Items to Finish M1
+1. Add baseline data containers and serialization seams referenced in `docs/DATA_MODEL.md`.
+2. Wire deterministic services into bootstrapping flows (e.g., scriptable installers) to demonstrate integration across scenes.
+3. Expand EditMode coverage to include data container validation and lifecycle tests per `docs/TEST_PLAN.md`.
 
 ## Recommended Next Steps
-- Spin up Unity 2022/2023 LTS project to replace placeholder settings.
-- Create core script assemblies and stub interfaces to enable deterministic systems.
-- Prioritize automation setup (CI/test harness) aligned with `docs/TEST_PLAN.md` before expanding into M2 features.
+- Finalize outstanding data containers to close M1 scope before committing to simulation work.
+- Introduce CI/test automation to execute the existing EditMode suite and guard the deterministic core.
+- Begin drafting overworld generation prototypes (per `docs/WORLDGEN.md`) once M1 acceptance criteria are fully satisfied.
