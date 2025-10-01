@@ -1,0 +1,1 @@
+Unity package manifests will live here in M1.
