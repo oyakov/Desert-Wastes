@@ -1,0 +1,17 @@
+{
+  "name": "Wastelands.UI",
+  "references": [
+    "Wastelands.Core",
+    "Wastelands.Simulation",
+    "Wastelands.BaseMode"
+  ],
+  "optionalUnityReferences": [],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "noEngineReferences": false
+}

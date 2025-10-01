@@ -1,0 +1,20 @@
+{
+  "name": "Wastelands.Tests.PlayMode",
+  "references": [
+    "Wastelands.Core",
+    "Wastelands.Simulation",
+    "Wastelands.BaseMode",
+    "UnityEngine.TestRunner"
+  ],
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": false,
+  "defineConstraints": [],
+  "noEngineReferences": false
+}
