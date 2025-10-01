@@ -3,6 +3,8 @@
   "references": [
     "Wastelands.Core",
     "Wastelands.Persistence",
+    "Wastelands.Generation",
+    "Wastelands.Simulation",
     "Wastelands.UI",
     "UnityEngine.TestRunner",
     "UnityEditor.TestRunner"
