@@ -3,6 +3,7 @@
   "references": [
     "Wastelands.Core",
     "Wastelands.Persistence",
+    "Wastelands.BaseMode",
     "Wastelands.Generation",
     "Wastelands.Simulation",
     "Wastelands.UI",
