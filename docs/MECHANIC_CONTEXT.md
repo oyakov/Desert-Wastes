@@ -44,6 +44,7 @@ This document captures the thematic context, narrative tone, and evocative detai
   - Fungal cathedral groves tended by mask-wearing archivists.
   - Salt flats etched with pilgrimage paths to the Oracle’s satellites.
   - Distinct tile biomes built from 16x16 sprite clusters with shared motifs for AI texture prompt references (e.g., teal fungal halos, amber sand ripples).
+
 - **Event & Content Hooks**:
   - Legends entries describing caravan bones discovered beneath reclaimed solar arrays.
   - Random flavor text for biomes (e.g., “Stormglass dunes sing when marched upon”).
@@ -82,7 +83,8 @@ This document captures the thematic context, narrative tone, and evocative detai
   - Zone definitions from `docs/BASE_MODE.md` should map to flavor-laden room descriptors.
   - Indirect order system must convert intents (“Fortify the wind-harp towers”) into job bundles respecting combat, labor, social, and intellectual skill tags.
   - Tile sprites should swap palettes to reflect zone states (occupied, sanctified, quarantined) so AI prompts can reference visible cues.
-
+=======
+  - Indirect order system must convert intents (“Fortify the wind-harp towers”) into job bundles.
 ## Command Hierarchy & Leadership
 - **Narrative Framing**: Authority flows through a reverent chain; leadership titles carry ritual weight and historical baggage.
 - **Player Fantasy**: Managing a cadre of captains, scribes, and quartermasters who interpret orders based on traits, loyalties, and omens.
