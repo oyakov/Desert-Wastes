@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using Wastelands.Core.Data;
 
@@ -13,7 +14,7 @@ namespace Wastelands.BaseMode
         private readonly Dictionary<string, BaseZoneRuntime> _zonesById;
         private readonly List<BaseJobResult> _recentlyCompletedJobs = new();
 
-        public BaseRuntimeState(WorldData world, BaseState baseState, int hoursPerDay)
+        public BaseRuntimeState(WorldData world, BaseState baseState, int hoursPerDay, BaseSiteContext? siteContext = null)
         {
             World = world ?? throw new ArgumentNullException(nameof(world));
             BaseState = baseState ?? throw new ArgumentNullException(nameof(baseState));
@@ -28,6 +29,7 @@ namespace Wastelands.BaseMode
             JobBoard = new BaseJobBoard();
             RaidThreat = new RaidThreatState();
             MandateTracker = new MandateTracker(hoursPerDay);
+            SiteContext = siteContext ?? BaseSiteContext.Empty;
         }
 
         public WorldData World { get; }
@@ -37,6 +39,7 @@ namespace Wastelands.BaseMode
         public RaidThreatState RaidThreat { get; }
         public MandateTracker MandateTracker { get; }
         public List<BaseJobResult> RecentlyCompletedJobs => _recentlyCompletedJobs;
+        public BaseSiteContext SiteContext { get; }
 
         public IReadOnlyDictionary<string, BaseZoneRuntime> Zones => _zonesById;
         public IBaseIndirectCommandDispatcher? CommandDispatcher { get; private set; }
@@ -203,9 +206,39 @@ namespace Wastelands.BaseMode
                 else
                 {
                     _jobs.Remove(job);
-                }
-            }
         }
+    }
+
+    public sealed class BaseSiteContext
+    {
+        public static BaseSiteContext Empty { get; } = new BaseSiteContext(string.Empty, Array.Empty<string>(), Array.Empty<BaseNearbyFaction>());
+
+        public BaseSiteContext(string biomeId, IEnumerable<string> hazards, IEnumerable<BaseNearbyFaction> nearbyFactions)
+        {
+            BiomeId = biomeId ?? string.Empty;
+            Hazards = new ReadOnlyCollection<string>((hazards ?? Array.Empty<string>()).ToArray());
+            NearbyFactions = new ReadOnlyCollection<BaseNearbyFaction>((nearbyFactions ?? Array.Empty<BaseNearbyFaction>()).ToArray());
+        }
+
+        public string BiomeId { get; }
+        public IReadOnlyList<string> Hazards { get; }
+        public IReadOnlyList<BaseNearbyFaction> NearbyFactions { get; }
+    }
+
+    public sealed class BaseNearbyFaction
+    {
+        public BaseNearbyFaction(string factionId, string name, float distance)
+        {
+            FactionId = factionId ?? string.Empty;
+            Name = name ?? string.Empty;
+            Distance = distance;
+        }
+
+        public string FactionId { get; }
+        public string Name { get; }
+        public float Distance { get; }
+    }
+}
 
         private static BaseJob? CreateZoneJob(BaseState state, BaseZone zone)
         {
