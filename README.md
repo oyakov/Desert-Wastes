@@ -11,7 +11,7 @@
 - **Fail State**: Leader permadeath or total faction collapse.
 
 ## Repository Usage
-This repository currently contains design documents, folder scaffolding, and planning artifacts only. No Unity project files or binary assets exist yet. Use the documents in `docs/` to understand the intended architecture, systems, and testing strategy. Future milestones will add Unity project settings, assembly definitions, and source code following the outlined plans.
+This repository now includes the Unity project scaffold alongside the design documentation. Project settings, assembly definitions, and core deterministic services are in place to support forthcoming overworld and base mode systems. Use the documents in `docs/` to understand the intended architecture, systems, and testing strategy while the early runtime foundation comes together.
 
 ## Contribution Rules
 - Read `docs/ARCHITECTURE.md`, `docs/TEST_PLAN.md`, and `docs/NAMING.md` before contributing.
@@ -21,13 +21,13 @@ This repository currently contains design documents, folder scaffolding, and pla
 
 ## What Exists Now
 - Documentation of design pillars, world generation, AI, social systems, mechanic context, architecture, and test plan.
-- Folder structure matching the planned Unity project layout with placeholder markers.
-- `.gitignore` tuned for Unity and this documentation-focused phase.
+- Unity project settings under `ProjectSettings/` and scoped assembly definition files inside `Assets/_Project/Scripts/`.
+- Deterministic core services (time provider, RNG, event bus) and tick manager scaffolding with corresponding EditMode unit tests.
+- Folder structure and placeholder assets that align with the planned Unity layout, plus a Unity-focused `.gitignore`.
 
 ## What Comes Next
-1. **M0 (current)**: Complete documentation and scaffolding.
-2. **M1**: Introduce Unity project settings, assembly definition files, and code scaffolding (interfaces, deterministic RNG, tick manager, data containers).
-3. **M2**: Implement overworld generation and simulation loop with legends logging and persistence seams.
-4. **M3**: Deliver base mode MVP with zones, jobs, raids, and comprehensive test coverage.
+1. **M1 (current)**: Harden the code scaffold by expanding data containers and integration seams for overworld/base systems.
+2. **M2**: Implement overworld generation and simulation loop with legends logging and persistence seams.
+3. **M3**: Deliver base mode MVP with zones, jobs, raids, and comprehensive test coverage.
 
 See `docs/ROADMAP.md` for detailed milestone descriptions and risk mitigation strategies.
