@@ -22,7 +22,24 @@ jobs:
           path: Library
           key: Library-${{ hashFiles('**/Packages/packages-lock.json') }}
 
+      - name: Validate Unity licensing secrets
+        id: license-secrets
+        shell: bash
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        run: |
+          if [[ -n "$UNITY_LICENSE" || -n "$UNITY_SERIAL" || ( -n "$UNITY_EMAIL" && -n "$UNITY_PASSWORD" ) ]]; then
+            echo "license_present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "license_present=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Unity license secrets are not configured; skipping test execution."
+          fi
+
       - name: Run Unity Test Runner
+        if: ${{ steps.license-secrets.outputs.license_present == 'true' }}
         uses: game-ci/unity-test-runner@v4
         with:
           projectPath: .
@@ -30,8 +47,16 @@ jobs:
           testMode: all
 
       - name: Upload test results
-        if: always()
+        if: ${{ steps.license-secrets.outputs.license_present == 'true' && always() }}
         uses: actions/upload-artifact@v4
         with:
           name: unity-test-results
           path: artifacts
+
+      - name: Summarize skipped tests
+        if: ${{ steps.license-secrets.outputs.license_present != 'true' }}
+        run: |
+          cat <<'MSG' >> "$GITHUB_STEP_SUMMARY"
+          ## Unity tests skipped
+          The Unity licensing secrets (`UNITY_LICENSE`, `UNITY_SERIAL`, or email/password pair) are not configured for this repository. Configure one of these secrets to enable automated EditMode and PlayMode test execution.
+          MSG
