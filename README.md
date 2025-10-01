@@ -19,6 +19,14 @@ This repository now includes the Unity project scaffold alongside the design doc
 - Follow the branching and PR process described in `docs/CONTRIBUTING.md`.
 - Preserve determinism and testability seams (RNG, Time, IO) in all systems.
 
+## Continuous Integration
+- Use the Unity Test Runner in batch mode to execute EditMode and PlayMode suites in CI
+  as documented in `docs/CI_PIPELINE.md`; export the NUnit XML results so your pipeline
+  can surface failures inline on pull requests.【F:docs/CI_PIPELINE.md†L1-L99】
+- Configure one of the supported Unity licensing secrets (`UNITY_LICENSE`, `UNITY_SERIAL`,
+  or `UNITY_EMAIL`/`UNITY_PASSWORD`) in GitHub Actions so the bundled workflow can
+  activate the editor headlessly.【F:docs/CI_PIPELINE.md†L4-L15】【F:.github/workflows/unity-tests.yml†L24-L58】
+
 ## Current State
 - Documentation of design pillars, world generation, AI, social systems, mechanic context, architecture, and test plan remains the single source of truth for feature intent and contributor expectations.【F:docs/ARCHITECTURE.md†L1-L8】【F:docs/DESIGN.md†L1-L9】
 - Unity project settings, scoped assembly definitions, and deterministic core services (time provider, RNG, event bus, tick manager) are in place to support reproducible simulation systems and automated EditMode coverage.【F:Assets/_Project/Scripts/Core/Management/TickManager.cs†L1-L80】【F:Assets/_Project/Scripts/Core/Management/DeterministicServiceContainer.cs†L1-L77】
