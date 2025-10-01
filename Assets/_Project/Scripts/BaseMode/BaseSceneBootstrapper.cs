@@ -15,9 +15,10 @@ namespace Wastelands.BaseMode
         private readonly WorldData _world;
         private readonly DeterministicServiceContainer _services;
         private readonly List<IBaseModeSystem> _systems;
+        private readonly IBaseIndirectCommandDispatcher _commandDispatcher;
         private readonly int _hoursPerDay;
 
-        public BaseSceneBootstrapper(WorldData world, DeterministicServiceContainer services, IEnumerable<IBaseModeSystem>? systems = null, int hoursPerDay = 24)
+        public BaseSceneBootstrapper(WorldData world, DeterministicServiceContainer services, IEnumerable<IBaseModeSystem>? systems = null, int hoursPerDay = 24, IBaseIndirectCommandDispatcher? commandDispatcher = null)
         {
             _world = world ?? throw new ArgumentNullException(nameof(world));
             _services = services ?? throw new ArgumentNullException(nameof(services));
@@ -28,10 +29,12 @@ namespace Wastelands.BaseMode
 
             _hoursPerDay = hoursPerDay;
             _systems = systems?.ToList() ?? new List<IBaseModeSystem>();
+            _commandDispatcher = commandDispatcher ?? new BaseIndirectCommandDispatcher(_services.EventBus);
         }
 
         public BaseRuntimeState? Runtime { get; private set; }
         public BaseModeSimulationLoop? SimulationLoop { get; private set; }
+        public IBaseIndirectCommandDispatcher CommandDispatcher => _commandDispatcher;
 
         public void Initialize()
         {
@@ -42,6 +45,7 @@ namespace Wastelands.BaseMode
             Runtime = new BaseRuntimeState(_world, baseState, _hoursPerDay);
             Runtime.SeedInitialJobs();
             Runtime.SeedInitialMandates(_world);
+            Runtime.BindCommandDispatcher(_commandDispatcher);
 
             if (_systems.Count == 0)
             {
@@ -51,6 +55,7 @@ namespace Wastelands.BaseMode
             SimulationLoop = new BaseModeSimulationLoop(_world, Runtime, _systems, _services.RngService);
             _services.TickManager.RegisterSystem(SimulationLoop);
             _services.EventBus.Publish(new BaseSceneBootstrapped(Runtime));
+            _services.EventBus.Publish(new BaseIndirectCommandDispatcherReady(_commandDispatcher));
         }
 
         private static IEnumerable<IBaseModeSystem> CreateDefaultSystems()

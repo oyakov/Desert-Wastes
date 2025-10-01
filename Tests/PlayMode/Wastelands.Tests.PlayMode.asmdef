@@ -4,6 +4,8 @@
     "Wastelands.Core",
     "Wastelands.Simulation",
     "Wastelands.BaseMode",
+    "Wastelands.BaseMode.Unity",
+    "Wastelands.UI",
     "UnityEngine.TestRunner"
   ],
   "optionalUnityReferences": [
