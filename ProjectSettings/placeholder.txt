@@ -1,1 +1,0 @@
-Unity ProjectSettings will be added in M1.

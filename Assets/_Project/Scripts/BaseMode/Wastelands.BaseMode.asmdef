@@ -1,0 +1,16 @@
+{
+  "name": "Wastelands.BaseMode",
+  "references": [
+    "Wastelands.Core",
+    "Wastelands.Persistence"
+  ],
+  "optionalUnityReferences": [],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "noEngineReferences": true
+}

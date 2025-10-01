@@ -1,0 +1,17 @@
+{
+  "name": "Wastelands.Simulation",
+  "references": [
+    "Wastelands.Core",
+    "Wastelands.Generation",
+    "Wastelands.Persistence"
+  ],
+  "optionalUnityReferences": [],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "noEngineReferences": true
+}
