@@ -2,6 +2,8 @@
   "name": "Wastelands.Tests.EditMode",
   "references": [
     "Wastelands.Core",
+    "Wastelands.Persistence",
+    "Wastelands.UI",
     "UnityEngine.TestRunner",
     "UnityEditor.TestRunner"
   ],
