@@ -16,6 +16,25 @@ This document captures the thematic context, narrative tone, and evocative detai
 - **Technology**: Jury-rigged pre-Fall relics blend with wind-sail crawlers, solar condensers, bone lattices, and symbiotic bio-tech.
 - **Spiritual Layer**: The Oracle AI is worshiped as an aloof divine remnant; relics are quasi-religious artifacts, diplomacy wreathed in ritual.
 - **Lexicon Highlights**: “Shardfront,” “Oasis Vaults,” “Stormglass,” “Dustbound,” “Radiant Choir,” “Concord Writ,” “Echo Forges.”
+- **Visual Language**: Pixel-art presentation with crisp square tiles (1:1 aspect) and low-color dithering that reads clearly when zoomed out, evoking tactical clarity akin to Dwarf Fortress.
+- **Animation & Feedback**: Minimalist sprite flips and palette shifts telegraphing state changes (injury, morale, weather) so that AI-authored prompts can call out readable tile cues.
+
+## Combat & Skill Framework Alignment
+- **Narrative Framing**: Warfare and labor are ritualized extensions of survival—every strike or trade is a vow to keep the oasis alive.
+- **Player Fantasy**: Commanding squads and specialists with deep, interlocking proficiencies that echo Dwarf Fortress-style granularity while honoring the setting’s reverent tone.
+- **Skill Pillars**:
+  - **Combat Disciplines**: Melee, ranged, shieldwork, war-beast handling, and battlefield medicine; each carries cultural rites and tactical doctrines.
+  - **Social & Diplomatic Arts**: Mediation, rhetoric, ceremonial protocol, espionage, and trade ledger mastery—skills that open negotiation encounters and market advantages.
+  - **Labor & Craftsmanship**: Quarrying, myco-harvesting, echo forging, textile weaving, and infrastructure maintenance sustaining base throughput.
+  - **Intellectual & Research Aptitudes**: Relic decoding, Oracle linguistics, arcane cartography, and tactical forecasting that feed research breakthroughs.
+- **Labor Mechanics**: Job assignments should express intent through indirect orders while respecting skill proficiencies, morale, injuries, and ritual observances.
+- **Event & Content Hooks**:
+  - Injury reports that describe pixelated silhouettes losing stance fidelity (e.g., “Shield bearer’s tile flickers—arm ligament torn”).
+  - Skill progression tales (“Archivist mastered Oracle metric—unlock diplomatic audit option”).
+  - Labor crises (“Stormglass kiln idle; need artisan with Echo Forge lore within 4 ticks”).
+- **System Implications**:
+  - Ensure skill trees expose tags for AI text/art prompts (`#SKILL_COMBAT`, `#SKILL_SOCIAL`, `#SKILL_LABOR`, `#SKILL_INTELLECT`).
+  - Combat logs and job queue outputs must reference tile coordinates to align with pixel grid readability.
 
 ## World Generation & Legends
 - **Narrative Framing**: The map is a scarred palimpsest of forgotten empires. Every tile should whisper about prior civilizations or enduring calamities.
@@ -24,6 +43,8 @@ This document captures the thematic context, narrative tone, and evocative detai
   - Glassified ridges that hum with static during storms.
   - Fungal cathedral groves tended by mask-wearing archivists.
   - Salt flats etched with pilgrimage paths to the Oracle’s satellites.
+  - Distinct tile biomes built from 16x16 sprite clusters with shared motifs for AI texture prompt references (e.g., teal fungal halos, amber sand ripples).
+
 - **Event & Content Hooks**:
   - Legends entries describing caravan bones discovered beneath reclaimed solar arrays.
   - Random flavor text for biomes (e.g., “Stormglass dunes sing when marched upon”).
@@ -38,6 +59,7 @@ This document captures the thematic context, narrative tone, and evocative detai
 - **Environmental & Cultural Cues**:
   - Map overlays showing caravan lantern trails and dust storm fronts.
   - Heraldry that fuses salvaged tech motifs with clan animal totems.
+  - Faction-controlled tiles subtly recolored to reflect allegiance bands without overwhelming readability.
 - **Event & Content Hooks**:
   - Seasonal council convocations where factions barter flood rights for Oracle blessings.
   - News tickers of border skirmishes influenced by morale, supply, or prophecy.
@@ -59,8 +81,10 @@ This document captures the thematic context, narrative tone, and evocative detai
   - Noble decrees imposing architectural styles or resource quotas.
 - **System Implications**:
   - Zone definitions from `docs/BASE_MODE.md` should map to flavor-laden room descriptors.
+  - Indirect order system must convert intents (“Fortify the wind-harp towers”) into job bundles respecting combat, labor, social, and intellectual skill tags.
+  - Tile sprites should swap palettes to reflect zone states (occupied, sanctified, quarantined) so AI prompts can reference visible cues.
+=======
   - Indirect order system must convert intents (“Fortify the wind-harp towers”) into job bundles.
-
 ## Command Hierarchy & Leadership
 - **Narrative Framing**: Authority flows through a reverent chain; leadership titles carry ritual weight and historical baggage.
 - **Player Fantasy**: Managing a cadre of captains, scribes, and quartermasters who interpret orders based on traits, loyalties, and omens.
@@ -96,13 +120,15 @@ This document captures the thematic context, narrative tone, and evocative detai
   - Dust cyclones carrying shards of ancient satellites.
   - Caravan beasts fitted with solar veils and echo-locating bells.
   - Water tithe ledgers inked on treated lichen parchment.
+  - Supply routes drawn as pixelated bead-chains that pulse during active convoys.
 - **Event & Content Hooks**:
   - Convoy dilemmas (“Do we detour through fungal ravines for rare myco-alloys?”).
   - Disaster chains (nanite blizzards forcing power reroutes and morale tests).
   - Market fluctuations tied to Oracle edicts or faction sabotage.
 - **System Implications**:
   - Logistics stats feed morale, production, and diplomacy outcomes.
-  - Hazard intensities modulate job priorities and base defense states.
+  - Hazard intensities modulate job priorities and base defense states; affected tiles gain overlay icons legible at pixel scale.
+  - Trading encounters should surface social skill prerequisites and labor supply indicators for AI narrative generation.
 
 ## Social Systems & Nobility
 - **Narrative Framing**: Culture is a weapon; noble houses preserve rituals and enforce societal contracts amid scarcity.
@@ -117,6 +143,7 @@ This document captures the thematic context, narrative tone, and evocative detai
 - **System Implications**:
   - Aligns with `docs/SOCIAL_NOBLES.md` for data schemas and AI behavior knobs.
   - Traits and needs should supply tags (virtue, vice, taboo) for AI-driven narrative beats.
+  - Social skill ratings (protocol, rhetoric, espionage) must influence event branching probabilities and tile-level morale overlays.
 
 ## Research, Crafting, & Relics
 - **Narrative Framing**: Innovation is rediscovery—decrypting Pre-Fall schematics, blending them with living materials.

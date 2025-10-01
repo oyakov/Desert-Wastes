@@ -1,7 +1,7 @@
 # Desert Wastes: World Unification Simulator
 
 ## Project Vision
-"Desert Wastes" is a post-apocalyptic, Dwarf Fortress-inspired world and history simulator built in Unity 2D URP. Players guide a fledgling faction to rebuild civilization by uniting the fractured world, balancing overworld strategy with detailed base management. Leadership matters: indirect orders cascade through command hierarchies, the permadeath of the expedition leader ends the campaign, and a semi-autonomous "divine" AI occasionally intervenes through curated event decks that reshape the world.
+"Desert Wastes" is a post-apocalyptic, Dwarf Fortress-inspired world and history simulator built in Unity 2D URP. Players guide a fledgling faction to rebuild civilization by uniting the fractured world, balancing overworld strategy with detailed base management. Leadership matters: indirect orders cascade through command hierarchies, the permadeath of the expedition leader ends the campaign, and a semi-autonomous "divine" AI occasionally intervenes through curated event decks that reshape the world. Presentation favors square-tile pixel art for tactical clarity, while combat, labor, social, and intellectual skill tracks echo the depth of classic fortress sims.
 
 ## One-Pager
 - **Genre**: Simulation / Strategy / Base Builder
