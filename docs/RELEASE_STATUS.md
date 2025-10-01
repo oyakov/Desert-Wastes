@@ -1,10 +1,10 @@
 # Release Plan Status Evaluation
 
-_Last updated: 2025-10-01_
+_Last updated: 2025-10-15_
 
 ## Current Stage Summary
-- **Stage**: Preparing Milestone M2 – Overworld Gen + Sim (not started).
-- **Rationale**: Code scaffold goals are satisfied: deterministic service container/installer flows are live, baseline world data containers/normalizers/validators are in place, and serialization plus EditMode coverage have landed. Simulation features outlined for M2 are still ahead.
+- **Stage**: Preparing Milestone M3 – Base Mode MVP (not started).
+- **Rationale**: Overworld generation and simulation deliverables are implemented with deterministic coverage. The pipeline produces normalized worlds, the multi-phase overworld loop mutates state and publishes events, and snapshot persistence seams are wired with serializer gateways and tests. Base mode integration work has not yet begun.
 
 ## Milestone Breakdown
 
@@ -12,15 +12,15 @@ _Last updated: 2025-10-01_
 | --- | --- | --- | --- |
 | **M0 – Docs & Scaffolding** | Documentation set (design, architecture, tests), project scaffolding, Unity-focused `.gitignore`, placeholder assets | ✅ Complete | `docs/` design docs, refreshed `README.md`, Unity folder layout in `Assets/` and `ProjectSettings/` |
 | **M1 – Code Scaffold** | Unity project settings, assembly definitions, deterministic services, TickManager, baseline data containers with tests | ✅ Complete | `ProjectSettings/*.asset`, asmdefs in `Assets/_Project/Scripts/**`, deterministic services & tick manager (`Assets/_Project/Scripts/Core/**`), data containers + normalizer (`Assets/_Project/Scripts/Core/Data/*.cs`), persistence & installer coverage in `Tests/EditMode/*.cs` |
-| **M2 – Overworld Gen + Sim** | World generation pipeline, overworld simulation loop, legends logging, persistence seams with tests | ⏳ Not started | No overworld generation or simulation implementations present |
+| **M2 – Overworld Gen + Sim** | World generation pipeline, overworld simulation loop, legends logging, persistence seams with tests | ✅ Complete | `Assets/_Project/Scripts/Generation/OverworldGenerationPipeline.cs`, `Assets/_Project/Scripts/Simulation/**`, persistence gateway in `Assets/_Project/Scripts/Persistence/OverworldSnapshotGateway.cs`, deterministic tests in `Tests/EditMode/OverworldGenerationPipelineTests.cs` & `Tests/EditMode/OverworldSimulationLoopTests.cs` |
 | **M3 – Base Mode MVP** | Base scene systems (zones, jobs, raids, social mandates), Oracle integration, comprehensive save/load & tests | ⏳ Not started | Base mode gameplay systems not yet implemented |
 
-## Key Gating Items to Kick Off M2
-1. Stand up the initial overworld generation pipeline per `docs/WORLDGEN.md`, using the new data containers as output targets.
-2. Implement the deterministic overworld simulation loop skeleton within `Assets/_Project/Scripts/Simulation/` and validate via EditMode tests.
-3. Define persistence seams for overworld snapshots (load/save entry points) that exercise `WorldDataSerializer` against representative scenarios.
+## Key Gating Items to Kick Off M3
+1. Define the base scene bootstrap that consumes `WorldData` outputs and seeds `BaseState` structures for player interaction.
+2. Implement core Base Mode systems (zones, jobs, raids, mandates) per `docs/BASE_MODE.md`, ensuring deterministic tick integration with the overworld loop.
+3. Extend persistence coverage to include Base Mode state diffs and round-trip save/load of combined overworld/base data.
 
 ## Recommended Next Steps
-- Stand up CI or editor automation to run the deterministic EditMode suite on every change.
-- Spike the world generation prototype using `WorldData` outputs to validate data shaping ahead of full implementation.
-- Outline the overworld simulation tick phases (per `docs/WORLDGEN.md` and `docs/BASE_MODE.md`) to de-risk cross-mode integration work.
+- Align simulation tick cadence with planned Base Mode systems to avoid conflicting mutations.
+- Expand EditMode coverage for Oracle/Base event interactions ahead of interactive UI work.
+- Establish CI/editor automation to run deterministic EditMode suites after Base Mode features start landing.
