@@ -4,7 +4,8 @@
     "Wastelands.BaseMode",
     "Wastelands.Core",
     "Wastelands.Generation",
-    "Wastelands.Persistence"
+    "Wastelands.Persistence",
+    "UnityEngine.UIElementsModule"
   ],
   "optionalUnityReferences": [],
   "includePlatforms": [],

@@ -41,7 +41,7 @@ namespace Wastelands.Tests.PlayMode
             var installer = go.AddComponent<BaseSceneInstallerBehaviour>();
             installer.AutoAdvanceTicks = false;
             installer.SetWorld(world);
-            go.AddComponent<BaseSceneDebugHud>();
+            go.AddComponent<BaseSceneProductionUI>();
 
             BaseRuntimeState? runtime = null;
             IBaseIndirectCommandDispatcher? dispatcher = null;

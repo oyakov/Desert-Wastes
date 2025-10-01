@@ -85,6 +85,7 @@ namespace Wastelands.BaseMode
             var selected = availableCards[channel.NextInt(0, availableCards.Count)];
 
             oracle.Cooldowns[selected.Id] = DefaultIncidentCooldown;
+            BalanceDecks(oracle, deck.Id);
 
             var payload = new Dictionary<string, string>(triggerParameters, StringComparer.Ordinal);
             var clonedEffects = CloneEffects(selected.Effects);
@@ -97,6 +98,49 @@ namespace Wastelands.BaseMode
                 payload,
                 clonedEffects,
                 context.Tick));
+        }
+
+        private static void BalanceDecks(OracleState oracle, string usedDeckId)
+        {
+            if (oracle.AvailableDecks == null || oracle.AvailableDecks.Count == 0)
+            {
+                return;
+            }
+
+            var updated = false;
+            foreach (var deck in oracle.AvailableDecks)
+            {
+                if (deck == null)
+                {
+                    continue;
+                }
+
+                if (string.Equals(deck.Id, usedDeckId, StringComparison.Ordinal))
+                {
+                    deck.Weight = BaseMath.Clamp(deck.Weight - 0.25f, 0.2f, 3f);
+                    updated = true;
+                }
+                else
+                {
+                    deck.Weight = BaseMath.Clamp(deck.Weight + 0.1f, 0.2f, 3f);
+                }
+            }
+
+            if (!updated)
+            {
+                return;
+            }
+
+            var nextDeck = oracle.AvailableDecks
+                .Where(d => d != null)
+                .OrderByDescending(d => d.Weight)
+                .ThenBy(d => d.Id, StringComparer.Ordinal)
+                .FirstOrDefault();
+
+            if (nextDeck != null)
+            {
+                oracle.ActiveDeckId = nextDeck.Id;
+            }
         }
 
         private static bool IsCardAvailable(OracleState oracle, string cardId)

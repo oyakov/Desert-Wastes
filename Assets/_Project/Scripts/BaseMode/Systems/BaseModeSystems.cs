@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using Wastelands.Core.Data;
+using Wastelands.Core.Services;
 
 namespace Wastelands.BaseMode
 {
@@ -407,6 +408,403 @@ namespace Wastelands.BaseMode
                     { "type", resolution.Mandate.Type.ToString() }
                 }
             });
+        }
+    }
+
+    public sealed class OracleIncidentResolutionSystem : IBaseModeSystem
+    {
+        private const float DeckRecoveryRate = 0.05f;
+        private const float MinDeckWeight = 0.2f;
+        private const float MaxDeckWeight = 3f;
+
+        private readonly Queue<OracleIncidentInjected> _pendingIncidents = new();
+        private readonly IDisposable _subscription;
+        private readonly Dictionary<string, float> _defaultDeckWeights = new(StringComparer.Ordinal);
+        private int _incidentSequence;
+
+        public OracleIncidentResolutionSystem(IEventBus eventBus)
+        {
+            if (eventBus == null)
+            {
+                throw new ArgumentNullException(nameof(eventBus));
+            }
+
+            _subscription = eventBus.Subscribe<OracleIncidentInjected>(OnIncidentInjected);
+        }
+
+        ~OracleIncidentResolutionSystem()
+        {
+            _subscription.Dispose();
+        }
+
+        public string Name => "oracle.incidents";
+
+        private void OnIncidentInjected(OracleIncidentInjected incident)
+        {
+            _pendingIncidents.Enqueue(incident);
+        }
+
+        public void Execute(in BaseModeTickContext context)
+        {
+            var oracle = context.World.OracleState;
+            if (oracle == null)
+            {
+                return;
+            }
+
+            CacheDefaultWeights(oracle);
+            StepCooldowns(oracle);
+
+            if (_pendingIncidents.Count > 0)
+            {
+                while (_pendingIncidents.Count > 0)
+                {
+                    var incident = _pendingIncidents.Dequeue();
+                    ApplyIncident(incident, context);
+                }
+            }
+
+            RecoverDeckWeights(oracle);
+        }
+
+        private void CacheDefaultWeights(OracleState oracle)
+        {
+            if (oracle.AvailableDecks == null)
+            {
+                return;
+            }
+
+            foreach (var deck in oracle.AvailableDecks)
+            {
+                if (deck == null || string.IsNullOrEmpty(deck.Id) || _defaultDeckWeights.ContainsKey(deck.Id))
+                {
+                    continue;
+                }
+
+                var baseline = deck.Weight <= 0f ? 1f : deck.Weight;
+                _defaultDeckWeights[deck.Id] = BaseMath.Clamp(baseline, MinDeckWeight, MaxDeckWeight);
+            }
+        }
+
+        private static void StepCooldowns(OracleState oracle)
+        {
+            if (oracle.Cooldowns == null || oracle.Cooldowns.Count == 0)
+            {
+                return;
+            }
+
+            var keys = oracle.Cooldowns.Keys.ToList();
+            foreach (var key in keys)
+            {
+                var value = oracle.Cooldowns[key];
+                if (value <= 0)
+                {
+                    continue;
+                }
+
+                oracle.Cooldowns[key] = Math.Max(0, value - 1);
+            }
+        }
+
+        private void RecoverDeckWeights(OracleState oracle)
+        {
+            if (oracle.AvailableDecks == null)
+            {
+                return;
+            }
+
+            foreach (var deck in oracle.AvailableDecks)
+            {
+                if (deck == null || string.IsNullOrEmpty(deck.Id))
+                {
+                    continue;
+                }
+
+                if (!_defaultDeckWeights.TryGetValue(deck.Id, out var baseline))
+                {
+                    baseline = deck.Weight <= 0f ? 1f : deck.Weight;
+                    _defaultDeckWeights[deck.Id] = BaseMath.Clamp(baseline, MinDeckWeight, MaxDeckWeight);
+                }
+
+                if (Math.Abs(deck.Weight - baseline) < 0.001f)
+                {
+                    continue;
+                }
+
+                if (deck.Weight < baseline)
+                {
+                    var delta = Math.Min(DeckRecoveryRate, baseline - deck.Weight);
+                    deck.Weight = BaseMath.Clamp(deck.Weight + delta, MinDeckWeight, MaxDeckWeight);
+                }
+                else
+                {
+                    var delta = Math.Min(DeckRecoveryRate, deck.Weight - baseline);
+                    deck.Weight = BaseMath.Clamp(deck.Weight - delta, MinDeckWeight, MaxDeckWeight);
+                }
+            }
+        }
+
+        private void ApplyIncident(OracleIncidentInjected incident, in BaseModeTickContext context)
+        {
+            var details = new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                { "deckId", incident.DeckId },
+                { "cardId", incident.CardId },
+                { "trigger", incident.Trigger }
+            };
+
+            foreach (var parameter in incident.TriggerParameters)
+            {
+                details[$"trigger.{parameter.Key}"] = parameter.Value;
+            }
+
+            if (!string.IsNullOrEmpty(incident.Narrative))
+            {
+                details["narrative"] = incident.Narrative;
+            }
+
+            foreach (var effect in incident.Effects)
+            {
+                ApplyEffect(effect, context, details);
+            }
+
+            var record = new EventRecord
+            {
+                Id = $"oracle_{incident.CardId}_{context.Tick:D6}_{_incidentSequence++:D2}",
+                Timestamp = context.Tick,
+                EventType = ResolveEventType(details),
+                Actors = new List<string>(),
+                LocationId = context.BaseState.SiteTileId,
+                Details = details
+            };
+
+            context.World.Events.Add(record);
+        }
+
+        private static EventType ResolveEventType(IReadOnlyDictionary<string, string> details)
+        {
+            if (details.TryGetValue("eventType", out var value) && Enum.TryParse(value, true, out EventType parsed))
+            {
+                return parsed;
+            }
+
+            return EventType.Catastrophe;
+        }
+
+        private static void ApplyEffect(EventEffect effect, in BaseModeTickContext context, Dictionary<string, string> details)
+        {
+            if (effect == null)
+            {
+                return;
+            }
+
+            var parameters = effect.Parameters ?? new Dictionary<string, string>(StringComparer.Ordinal);
+            switch (effect.EffectType)
+            {
+                case "adjust_infrastructure":
+                    ApplyInfrastructureAdjustment(parameters, context, details);
+                    break;
+                case "adjust_tension":
+                    ApplyTensionAdjustment(parameters, context, details);
+                    break;
+                case "add_inventory":
+                    ApplyInventoryAdjustment(parameters, context, details);
+                    break;
+                case "adjust_zone_morale":
+                    ApplyZoneMoraleAdjustment(parameters, context, details);
+                    break;
+                case "schedule_job":
+                    ScheduleJob(parameters, context, details);
+                    break;
+                case "set_alert_level":
+                    ApplyAlertLevel(parameters, context, details);
+                    break;
+                case "spawn_event":
+                    ApplySpawnMetadata(parameters, details);
+                    break;
+            }
+        }
+
+        private static void ApplyInfrastructureAdjustment(IReadOnlyDictionary<string, string> parameters, in BaseModeTickContext context, Dictionary<string, string> details)
+        {
+            if (!TryGetString(parameters, "stat", out var stat) || !TryGetFloat(parameters, "delta", out var delta) || Math.Abs(delta) < float.Epsilon)
+            {
+                return;
+            }
+
+            AdjustInfrastructure(context.BaseState.Infrastructure, stat, delta);
+            if (context.BaseState.Infrastructure.TryGetValue(stat, out var value))
+            {
+                details[$"infrastructure.{stat}"] = value.ToString("0.###", CultureInfo.InvariantCulture);
+            }
+        }
+
+        private static void ApplyTensionAdjustment(IReadOnlyDictionary<string, string> parameters, in BaseModeTickContext context, Dictionary<string, string> details)
+        {
+            if (!TryGetFloat(parameters, "delta", out var delta) || Math.Abs(delta) < float.Epsilon)
+            {
+                return;
+            }
+
+            if (context.World.OracleState == null)
+            {
+                return;
+            }
+
+            context.World.OracleState.TensionScore = BaseMath.Clamp01(context.World.OracleState.TensionScore + delta);
+            details["tension"] = context.World.OracleState.TensionScore.ToString("0.###", CultureInfo.InvariantCulture);
+        }
+
+        private static void ApplyInventoryAdjustment(IReadOnlyDictionary<string, string> parameters, in BaseModeTickContext context, Dictionary<string, string> details)
+        {
+            if (!TryGetString(parameters, "itemId", out var itemId) || !TryGetInt(parameters, "quantity", out var quantity) || quantity == 0)
+            {
+                return;
+            }
+
+            var stack = context.BaseState.Inventory.FirstOrDefault(s => string.Equals(s.ItemId, itemId, StringComparison.Ordinal));
+            if (stack == null)
+            {
+                if (quantity > 0)
+                {
+                    context.BaseState.Inventory.Add(new ItemStack { ItemId = itemId, Quantity = quantity });
+                }
+            }
+            else
+            {
+                stack.Quantity = Math.Max(0, stack.Quantity + quantity);
+            }
+
+            var updated = context.BaseState.Inventory.FirstOrDefault(s => string.Equals(s.ItemId, itemId, StringComparison.Ordinal));
+            if (updated != null)
+            {
+                details[$"inventory.{itemId}"] = updated.Quantity.ToString(CultureInfo.InvariantCulture);
+            }
+        }
+
+        private static void ApplyZoneMoraleAdjustment(IReadOnlyDictionary<string, string> parameters, in BaseModeTickContext context, Dictionary<string, string> details)
+        {
+            if (!TryGetString(parameters, "zoneId", out var zoneId) || !TryGetFloat(parameters, "delta", out var delta))
+            {
+                return;
+            }
+
+            if (!context.Runtime.TryGetZoneRuntime(zoneId, out var zoneRuntime))
+            {
+                return;
+            }
+
+            zoneRuntime.MoraleModifier = BaseMath.Clamp(zoneRuntime.MoraleModifier + delta, 0.1f, 2f);
+            details[$"zone.{zoneId}.morale"] = zoneRuntime.MoraleModifier.ToString("0.###", CultureInfo.InvariantCulture);
+        }
+
+        private static void ScheduleJob(IReadOnlyDictionary<string, string> parameters, in BaseModeTickContext context, Dictionary<string, string> details)
+        {
+            var jobId = TryGetString(parameters, "jobId", out var idValue) && !string.IsNullOrWhiteSpace(idValue)
+                ? idValue
+                : $"oracle_job_{context.Tick:D6}";
+
+            var jobType = TryGetString(parameters, "jobType", out var typeValue) && Enum.TryParse(typeValue, true, out BaseJobType parsedType)
+                ? parsedType
+                : BaseJobType.Maintenance;
+
+            var priority = TryGetString(parameters, "priority", out var priorityValue) && Enum.TryParse(priorityValue, true, out BaseJobPriority parsedPriority)
+                ? parsedPriority
+                : BaseJobPriority.High;
+
+            var duration = TryGetInt(parameters, "duration", out var parsedDuration) && parsedDuration > 0
+                ? parsedDuration
+                : 6;
+
+            parameters.TryGetValue("zoneId", out var zoneId);
+            var repeatable = TryGetString(parameters, "repeatable", out var repeatValue) && string.Equals(repeatValue, "true", StringComparison.OrdinalIgnoreCase);
+
+            var job = new BaseJob
+            {
+                Id = jobId,
+                Type = jobType,
+                Priority = priority,
+                ZoneId = string.IsNullOrWhiteSpace(zoneId) ? null : zoneId,
+                DurationHours = duration,
+                RemainingHours = duration,
+                Repeatable = repeatable
+            };
+
+            context.Runtime.JobBoard.Enqueue(job);
+            details[$"job.{jobId}"] = jobType.ToString();
+        }
+
+        private static void ApplyAlertLevel(IReadOnlyDictionary<string, string> parameters, in BaseModeTickContext context, Dictionary<string, string> details)
+        {
+            if (!TryGetString(parameters, "level", out var levelValue) || !Enum.TryParse(levelValue, true, out AlertLevel level))
+            {
+                return;
+            }
+
+            context.BaseState.AlertLevel = level;
+            details["alertLevel"] = level.ToString();
+        }
+
+        private static void ApplySpawnMetadata(IReadOnlyDictionary<string, string> parameters, Dictionary<string, string> details)
+        {
+            if (parameters.TryGetValue("eventType", out var eventType))
+            {
+                details["eventType"] = eventType;
+            }
+
+            if (parameters.TryGetValue("summary", out var summary))
+            {
+                details["summary"] = summary;
+            }
+
+            if (parameters.TryGetValue("target", out var target))
+            {
+                details["target"] = target;
+            }
+        }
+
+        private static void AdjustInfrastructure(IDictionary<string, float> infrastructure, string key, float delta)
+        {
+            if (!infrastructure.TryGetValue(key, out var value))
+            {
+                value = 0.5f;
+            }
+
+            infrastructure[key] = BaseMath.Clamp(value + delta, 0f, 1.5f);
+        }
+
+        private static bool TryGetString(IReadOnlyDictionary<string, string> parameters, string key, out string value)
+        {
+            if (parameters != null && parameters.TryGetValue(key, out var raw))
+            {
+                value = raw;
+                return true;
+            }
+
+            value = string.Empty;
+            return false;
+        }
+
+        private static bool TryGetFloat(IReadOnlyDictionary<string, string> parameters, string key, out float value)
+        {
+            value = 0f;
+            if (parameters == null || !parameters.TryGetValue(key, out var raw))
+            {
+                return false;
+            }
+
+            return float.TryParse(raw, NumberStyles.Float, CultureInfo.InvariantCulture, out value);
+        }
+
+        private static bool TryGetInt(IReadOnlyDictionary<string, string> parameters, string key, out int value)
+        {
+            value = 0;
+            if (parameters == null || !parameters.TryGetValue(key, out var raw))
+            {
+                return false;
+            }
+
+            return int.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out value);
         }
     }
 
