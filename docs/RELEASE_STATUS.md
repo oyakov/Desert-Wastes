@@ -3,8 +3,8 @@
 _Last updated: 2025-10-15_
 
 ## Current Stage Summary
-- **Stage**: Preparing Milestone M3 – Base Mode MVP (not started).
-- **Rationale**: Overworld generation and simulation deliverables are implemented with deterministic coverage. The pipeline produces normalized worlds, the multi-phase overworld loop mutates state and publishes events, and snapshot persistence seams are wired with serializer gateways and tests. Base mode integration work has not yet begun.
+- **Stage**: Milestone M3 – Base Mode MVP (simulation scaffolding in progress).
+- **Rationale**: Overworld generation, overworld simulation, and persistence seams are complete. Base Mode now boots into a deterministic runtime with systems for zones, jobs, raids, mandates, and Oracle incidents under EditMode coverage, but the experience is still surfaced through a debug HUD and lacks production UI plus save/load for base state.【F:Assets/_Project/Scripts/Generation/OverworldGenerationPipeline.cs†L9-L94】【F:Assets/_Project/Scripts/Simulation/OverworldSimulationLoop.cs†L57-L103】【F:Assets/_Project/Scripts/Persistence/OverworldSnapshotGateway.cs†L7-L83】【F:Assets/_Project/Scripts/BaseMode/BaseSceneBootstrapper.cs†L39-L61】【F:Assets/_Project/Scripts/BaseMode/Systems/BaseModeSystems.cs†L42-L390】【F:Tests/EditMode/BaseModeSimulationLoopTests.cs†L13-L71】【F:Assets/_Project/Scripts/BaseMode/Unity/BaseSceneDebugHud.cs†L11-L160】
 
 ## Milestone Breakdown
 
@@ -13,12 +13,12 @@ _Last updated: 2025-10-15_
 | **M0 – Docs & Scaffolding** | Documentation set (design, architecture, tests), project scaffolding, Unity-focused `.gitignore`, placeholder assets | ✅ Complete | `docs/` design docs, refreshed `README.md`, Unity folder layout in `Assets/` and `ProjectSettings/` |
 | **M1 – Code Scaffold** | Unity project settings, assembly definitions, deterministic services, TickManager, baseline data containers with tests | ✅ Complete | `ProjectSettings/*.asset`, asmdefs in `Assets/_Project/Scripts/**`, deterministic services & tick manager (`Assets/_Project/Scripts/Core/**`), data containers + normalizer (`Assets/_Project/Scripts/Core/Data/*.cs`), persistence & installer coverage in `Tests/EditMode/*.cs` |
 | **M2 – Overworld Gen + Sim** | World generation pipeline, overworld simulation loop, legends logging, persistence seams with tests | ✅ Complete | `Assets/_Project/Scripts/Generation/OverworldGenerationPipeline.cs`, `Assets/_Project/Scripts/Simulation/**`, persistence gateway in `Assets/_Project/Scripts/Persistence/OverworldSnapshotGateway.cs`, deterministic tests in `Tests/EditMode/OverworldGenerationPipelineTests.cs` & `Tests/EditMode/OverworldSimulationLoopTests.cs` |
-| **M3 – Base Mode MVP** | Base scene systems (zones, jobs, raids, social mandates), Oracle integration, comprehensive save/load & tests | ⏳ Not started | Base mode gameplay systems not yet implemented |
+| **M3 – Base Mode MVP** | Base scene systems (zones, jobs, raids, social mandates), Oracle integration, comprehensive save/load & tests | 🚧 In progress | Simulation scaffolding, Oracle hooks, and deterministic tests exist; production UI and persistence expansion outstanding.【F:Assets/_Project/Scripts/BaseMode/Systems/BaseModeSystems.cs†L42-L390】【F:Assets/_Project/Scripts/BaseMode/Systems/OracleSynchronizer.cs†L8-L162】【F:Tests/EditMode/BaseModeSimulationLoopTests.cs†L13-L71】 |
 
-## Key Gating Items to Kick Off M3
-1. Define the base scene bootstrap that consumes `WorldData` outputs and seeds `BaseState` structures for player interaction.
-2. Implement core Base Mode systems (zones, jobs, raids, mandates) per `docs/BASE_MODE.md`, ensuring deterministic tick integration with the overworld loop.
-3. Extend persistence coverage to include Base Mode state diffs and round-trip save/load of combined overworld/base data.
+## Key Gating Items to Exit M3
+1. Ship production UI and input loops that replace the debug HUD while leveraging the indirect command dispatcher and runtime systems seeded by the bootstrapper.【F:Assets/_Project/Scripts/BaseMode/BaseSceneBootstrapper.cs†L39-L61】【F:Assets/_Project/Scripts/BaseMode/Unity/BaseSceneDebugHud.cs†L11-L160】
+2. Expand persistence coverage to serialize combined overworld/base state and verify deterministic round-trips in EditMode suites.【F:Assets/_Project/Scripts/Persistence/OverworldSnapshotGateway.cs†L7-L83】【F:Tests/EditMode/BaseModeSimulationLoopTests.cs†L35-L70】
+3. Implement gameplay-visible Oracle incident handlers and deck balancing loops so injected incidents impact base state beyond tension adjustments.【F:Assets/_Project/Scripts/BaseMode/Systems/OracleSynchronizer.cs†L8-L162】【F:Assets/_Project/Scripts/BaseMode/Systems/BaseModeSystems.cs†L221-L390】
 
 ## Recommended Next Steps
 - Align simulation tick cadence with planned Base Mode systems to avoid conflicting mutations.
