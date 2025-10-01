@@ -39,6 +39,7 @@ namespace Wastelands.BaseMode
         public List<BaseJobResult> RecentlyCompletedJobs => _recentlyCompletedJobs;
 
         public IReadOnlyDictionary<string, BaseZoneRuntime> Zones => _zonesById;
+        public IBaseIndirectCommandDispatcher? CommandDispatcher { get; private set; }
 
         public IEnumerable<BaseZoneRuntime> EnumerateZones() => _zonesById.Values;
 
@@ -55,6 +56,11 @@ namespace Wastelands.BaseMode
         public void SeedInitialMandates(WorldData world)
         {
             MandateTracker.Initialize(world, BaseState);
+        }
+
+        public void BindCommandDispatcher(IBaseIndirectCommandDispatcher dispatcher)
+        {
+            CommandDispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
         }
 
         public void RecordCompletedJobs(IEnumerable<BaseJobResult> jobs)
