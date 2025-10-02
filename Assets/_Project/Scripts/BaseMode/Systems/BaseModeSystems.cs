@@ -613,6 +613,12 @@ namespace Wastelands.BaseMode
                 case "adjust_zone_morale":
                     ApplyZoneMoraleAdjustment(parameters, context, details);
                     break;
+                case "adjust_zone_wear":
+                    ApplyZoneWearAdjustment(parameters, context, details);
+                    break;
+                case "adjust_zone_efficiency":
+                    ApplyZoneEfficiencyAdjustment(parameters, context, details);
+                    break;
                 case "schedule_job":
                     ScheduleJob(parameters, context, details);
                     break;
@@ -621,6 +627,9 @@ namespace Wastelands.BaseMode
                     break;
                 case "spawn_event":
                     ApplySpawnMetadata(parameters, details);
+                    break;
+                case "modify_raid_state":
+                    ApplyRaidModifiers(parameters, context, details);
                     break;
             }
         }
@@ -698,6 +707,38 @@ namespace Wastelands.BaseMode
             details[$"zone.{zoneId}.morale"] = zoneRuntime.MoraleModifier.ToString("0.###", CultureInfo.InvariantCulture);
         }
 
+        private static void ApplyZoneWearAdjustment(IReadOnlyDictionary<string, string> parameters, in BaseModeTickContext context, Dictionary<string, string> details)
+        {
+            if (!TryGetString(parameters, "zoneId", out var zoneId) || !TryGetFloat(parameters, "delta", out var delta) || Math.Abs(delta) < float.Epsilon)
+            {
+                return;
+            }
+
+            if (!context.Runtime.TryGetZoneRuntime(zoneId, out var zoneRuntime))
+            {
+                return;
+            }
+
+            zoneRuntime.Wear = BaseMath.Clamp(zoneRuntime.Wear + delta, 0f, 1f);
+            details[$"zone.{zoneId}.wear"] = zoneRuntime.Wear.ToString("0.###", CultureInfo.InvariantCulture);
+        }
+
+        private static void ApplyZoneEfficiencyAdjustment(IReadOnlyDictionary<string, string> parameters, in BaseModeTickContext context, Dictionary<string, string> details)
+        {
+            if (!TryGetString(parameters, "zoneId", out var zoneId) || !TryGetFloat(parameters, "delta", out var delta) || Math.Abs(delta) < float.Epsilon)
+            {
+                return;
+            }
+
+            if (!context.Runtime.TryGetZoneRuntime(zoneId, out var zoneRuntime))
+            {
+                return;
+            }
+
+            zoneRuntime.Zone.Efficiency = BaseMath.Clamp(zoneRuntime.Zone.Efficiency + delta, 0.3f, 1.4f);
+            details[$"zone.{zoneId}.efficiency"] = zoneRuntime.Zone.Efficiency.ToString("0.###", CultureInfo.InvariantCulture);
+        }
+
         private static void ScheduleJob(IReadOnlyDictionary<string, string> parameters, in BaseModeTickContext context, Dictionary<string, string> details)
         {
             var jobId = TryGetString(parameters, "jobId", out var idValue) && !string.IsNullOrWhiteSpace(idValue)
@@ -763,6 +804,76 @@ namespace Wastelands.BaseMode
             }
         }
 
+        private static void ApplyRaidModifiers(IReadOnlyDictionary<string, string> parameters, in BaseModeTickContext context, Dictionary<string, string> details)
+        {
+            var raid = context.Runtime.RaidThreat;
+            var updated = false;
+
+            if (TryGetFloat(parameters, "threat", out var absoluteThreat))
+            {
+                raid.ThreatMeter = BaseMath.Clamp01(absoluteThreat);
+                updated = true;
+            }
+            else if (TryGetFloat(parameters, "threatDelta", out var threatDelta) && Math.Abs(threatDelta) > float.Epsilon)
+            {
+                raid.ThreatMeter = BaseMath.Clamp01(raid.ThreatMeter + threatDelta);
+                updated = true;
+            }
+
+            if (TryGetInt(parameters, "hours", out var absoluteHours))
+            {
+                raid.HoursUntilRaid = Math.Max(0, absoluteHours);
+                raid.RaidScheduled = raid.HoursUntilRaid > 0 || raid.RaidScheduled;
+                details["raid.hoursUntil"] = raid.HoursUntilRaid.ToString(CultureInfo.InvariantCulture);
+                details["raid.scheduled"] = raid.RaidScheduled ? "true" : "false";
+                updated = true;
+            }
+            else if (TryGetInt(parameters, "hoursDelta", out var hoursDelta) && hoursDelta != 0)
+            {
+                if (!raid.RaidScheduled && hoursDelta > 0)
+                {
+                    raid.RaidScheduled = true;
+                    raid.HoursUntilRaid = hoursDelta;
+                }
+                else if (raid.RaidScheduled)
+                {
+                    raid.HoursUntilRaid = Math.Max(0, raid.HoursUntilRaid + hoursDelta);
+                    if (raid.HoursUntilRaid == 0 && hoursDelta < 0)
+                    {
+                        raid.RaidScheduled = false;
+                    }
+                }
+
+                details["raid.hoursUntil"] = raid.HoursUntilRaid.ToString(CultureInfo.InvariantCulture);
+                details["raid.scheduled"] = raid.RaidScheduled ? "true" : "false";
+                updated = true;
+            }
+
+            if (TryGetString(parameters, "attacker", out var attacker) && !string.IsNullOrWhiteSpace(attacker))
+            {
+                raid.AttackingFactionId = attacker;
+                details["raid.attacker"] = attacker;
+                updated = true;
+            }
+
+            if (TryGetBool(parameters, "scheduled", out var scheduled))
+            {
+                raid.RaidScheduled = scheduled;
+                if (!raid.RaidScheduled)
+                {
+                    raid.HoursUntilRaid = 0;
+                }
+
+                details["raid.scheduled"] = raid.RaidScheduled ? "true" : "false";
+                updated = true;
+            }
+
+            if (updated)
+            {
+                details["raid.threat"] = raid.ThreatMeter.ToString("0.###", CultureInfo.InvariantCulture);
+            }
+        }
+
         private static void AdjustInfrastructure(IDictionary<string, float> infrastructure, string key, float delta)
         {
             if (!infrastructure.TryGetValue(key, out var value))
@@ -805,6 +916,17 @@ namespace Wastelands.BaseMode
             }
 
             return int.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out value);
+        }
+
+        private static bool TryGetBool(IReadOnlyDictionary<string, string> parameters, string key, out bool value)
+        {
+            value = false;
+            if (parameters == null || !parameters.TryGetValue(key, out var raw))
+            {
+                return false;
+            }
+
+            return bool.TryParse(raw, out value);
         }
     }
 

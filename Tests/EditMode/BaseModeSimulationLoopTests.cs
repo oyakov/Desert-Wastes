@@ -80,6 +80,16 @@ namespace Wastelands.Tests.EditMode
                 },
                 new()
                 {
+                    EffectType = "adjust_zone_wear",
+                    Parameters = new Dictionary<string, string> { { "zoneId", "zone_hab" }, { "delta", "-0.25" } }
+                },
+                new()
+                {
+                    EffectType = "adjust_zone_efficiency",
+                    Parameters = new Dictionary<string, string> { { "zoneId", "zone_hab" }, { "delta", "0.12" } }
+                },
+                new()
+                {
                     EffectType = "schedule_job",
                     Parameters = new Dictionary<string, string>
                     {
@@ -99,6 +109,16 @@ namespace Wastelands.Tests.EditMode
                 {
                     EffectType = "adjust_tension",
                     Parameters = new Dictionary<string, string> { { "delta", "-0.1" } }
+                },
+                new()
+                {
+                    EffectType = "modify_raid_state",
+                    Parameters = new Dictionary<string, string>
+                    {
+                        { "threatDelta", "-0.2" },
+                        { "hours", "6" },
+                        { "attacker", "faction_raiders" }
+                    }
                 }
             };
 
@@ -140,13 +160,26 @@ namespace Wastelands.Tests.EditMode
             Assert.That(world.BaseState.Inventory.Any(stack => stack.ItemId == "oracle_cache" && stack.Quantity >= 3));
             Assert.That(world.BaseState.AlertLevel, Is.EqualTo(AlertLevel.Elevated));
             Assert.That(world.Events.Any(evt => evt.Id.StartsWith("oracle_")));
-            Assert.That(world.Events.Last().Details.ContainsKey("job.oracle_inspection"));
+            var lastEvent = world.Events.Last();
+            Assert.That(lastEvent.Details.ContainsKey("job.oracle_inspection"));
+            Assert.That(lastEvent.Details.ContainsKey("zone.zone_hab.wear"));
+            Assert.That(lastEvent.Details.ContainsKey("zone.zone_hab.efficiency"));
+            Assert.That(lastEvent.Details.ContainsKey("raid.threat"));
+            Assert.That(lastEvent.Details.TryGetValue("raid.attacker", out var raidAttacker) && raidAttacker == "faction_raiders");
+            Assert.That(lastEvent.Details.TryGetValue("raid.scheduled", out var raidScheduled) && raidScheduled == "true");
 
             var primaryDeck = world.OracleState.AvailableDecks.First(d => d.Id == "deck_minor_01");
             var secondaryDeck = world.OracleState.AvailableDecks.First(d => d.Id == "deck_minor_alt");
             Assert.That(primaryDeck.Weight, Is.LessThan(1f));
             Assert.That(secondaryDeck.Weight, Is.GreaterThan(0.5f));
             Assert.That(bootstrapper.Runtime!.JobBoard.Jobs.Any(job => job.Id == "oracle_inspection"));
+            var habZone = bootstrapper.Runtime!.Zones["zone_hab"];
+            Assert.That(habZone.Wear, Is.LessThan(0.1f));
+            Assert.That(habZone.Zone.Efficiency, Is.GreaterThan(0.5f));
+            var raidState = bootstrapper.Runtime.RaidThreat;
+            Assert.That(raidState.RaidScheduled, Is.True);
+            Assert.That(raidState.HoursUntilRaid, Is.EqualTo(6));
+            Assert.That(raidState.AttackingFactionId, Is.EqualTo("faction_raiders"));
         }
 
         [Test]
