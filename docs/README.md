@@ -28,6 +28,7 @@ This index points to the authoritative design, engineering, and process referenc
 
 ## Planning & Status Artifacts
 - `docs/ROADMAP.md` – milestone sequencing, risk register, and dependency notes for upcoming work.
+- `docs/PROTOTYPE_LAUNCH_MILESTONES.md` – focused plan to reach a locally playable prototype with clear exit criteria.
 - `docs/RELEASE_STATUS.md` – milestone-by-milestone delivery evidence and the current release stage summary.
 - `docs/STATUS_REPORT.md` – latest runtime/test coverage evaluation and prioritized risks across systems.
 - `docs/MILESTONE_EVALUATION.md` – milestone acceptance criteria and evidence tying runtime features back to goals.
